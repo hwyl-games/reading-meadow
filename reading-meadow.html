@@ -443,7 +443,7 @@ function levelUp(n){
       <div class="podium">${f.map(s=>`<div class="pod">${s}<b></b></div>`).join("")}</div><p class="podname">${esc(S.av?S.av.name:"You")} wins gold!</p><p>Now you're on Level ${n+1}. Ready for trickier stories?</p><button class="next" id="popok">Let's go!</button></div></div>`;
     [..."213"].forEach((t,i)=>$(".podium").children[i].querySelector("b").textContent=t);
     confetti();$("#popok").focus();
-    $("#popok").onclick=()=>{$("#popwrap").innerHTML="";popOpen=false;S.level=S.top;save();renderTop();renderMeadow();round=0;showPop()};
+    $("#popok").onclick=()=>{$("#popwrap").innerHTML="";popOpen=false;S.level=S.top;save();renderTop();renderMeadow();if(solved){round=0;next()}showPop()};
   },3300);
 }
 const PATS=["plain","stripes","spots","zigzag"];
@@ -549,7 +549,7 @@ function win(el){
   const rv=!slip&&S.streak>0&&S.streak%10===0;
   if(after>before){const i=after-1;pops.push({pic:animal(friend(i)),h:"A new friend!",p:rv?`${friendName(i)} has come to live in your meadow. AND you got ${S.streak} in a row! Time for a MEADOW RAVE!`:`${friendName(i)} has come to live in your meadow. Let's have a party!`,b:rv?"Rave time!":"Party time!",dance:rv?"rave":1})}
   else if(rv)pops.push({pic:animal(Object.assign(AV(),{shades:1})),h:`${S.streak} in a row!`,p:"What an amazing streak! Time for a MEADOW RAVE!",b:"Rave time!",dance:"rave"});
-  if(S.level===S.top&&S.top<LAST&&S.done[S.top]>=LV[S.top].need){S.top++;pendingUnlock=S.top;pops.push({levelup:S.top})}
+  if(S.level===S.top&&S.top<LAST&&S.done[S.top]>=LV[S.top].need){S.top++;S.level=S.top;pendingUnlock=S.top;pops.push({levelup:S.top})}
   save();renderTop();renderMeadow();
   if(!slip){const p=$("#streakpill");p.classList.remove("bump");void p.offsetWidth;p.classList.add("bump")}
   setTimeout(showPop,900);
