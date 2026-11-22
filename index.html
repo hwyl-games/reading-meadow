@@ -191,8 +191,7 @@ const MOODS1=["happy","sad","cross","sleepy"],MOODS=[...MOODS1,"surprised"];
 const SP=["bunny","cat","bear","pig","mouse","panda"];
 const BODY={bunny:"#f7f3ee",cat:"#f2a65a",bear:"#a8754f",pig:"#f6b3c2",mouse:"#bdb8cb",panda:"#f7f3ee"};
 const KW={hat:"hat",scarf:"scarf",bal:"balloon"};
-const NAMES=[["Mary","f"],["Tom","m"],["Pip","m"],["Bella","f"],["Max","m"],["Luna","f"],["Ben","m"],["Rosie","f"],["Sam","m"],["Lily","f"],["Fred","m"],["Ella","f"]];
-const FN=["Hoppy","Ginger","Bramble","Petal","Pebble","Bamboo"];
+const NAMES=[["Edwyn","m"],["Betty","f"],["Henry","m"],["William","m"],["Gwen","f"],["Sharan","f"],["Iona","f"],["Ada","f"],["Tom","m"],["Emily","f"],["Mimi","f"],["Fluffy","f"],["Cinnamon","f"]];
 const PER=5,KEY="storyMeadow2";
 const CHEER=["Yay! Brilliant reading!","Super star!","Wow, you got it!","Amazing! The animals are cheering!","Fantastic!"];
 const OOPS=["Not quite. Read the story again!","Ooh, so close! Look carefully.","Have another read. You can do it!"];
@@ -310,8 +309,7 @@ const LV=[{name:"Level 1",need:20},{name:"Level 2",need:20},{name:"Level 3",need
 const LAST=LV.length-1;
 const friend=i=>{const k=["hat","scarf","bal"][i%3];return A(SP[i%6],{[k]:COLS[(i*2)%5],gl:i%7===4?1:0})};
 const FMAX=24;
-const FN2=["Clover","Biscuit","Maple","Pudding","Sunny","Tumble"];
-const friendName=i=>{const n=FN[i%6];return `${n.toLowerCase()===avName()?FN2[i%6]:n} the ${SP[i%6]}`};
+const friendName=i=>{const pool=NAMES.map(n=>n[0]).filter(n=>n.toLowerCase()!==avName());return `${pool[i%pool.length]} the ${SP[i%6]}`};
 
 /* ---------- state ---------- */
 let S={stars:0,level:0,top:0,done:[0,0,0,0],mute:false,streak:0};
