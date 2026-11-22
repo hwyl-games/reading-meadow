@@ -309,7 +309,9 @@ const LV=[{name:"Level 1",need:20},{name:"Level 2",need:20},{name:"Level 3",need
 const LAST=LV.length-1;
 const friend=i=>{const k=["hat","scarf","bal"][i%3];return A(SP[i%6],{[k]:COLS[(i*2)%5],gl:i%7===4?1:0})};
 const FMAX=24;
-const friendName=i=>{const pool=NAMES.map(n=>n[0]).filter(n=>n.toLowerCase()!==avName());return `${pool[i%pool.length]} the ${SP[i%6]}`};
+// Meadow friends use the 13 main names first, then these once there are more than 13 friends
+const EXTRA=["Hoppy","Ginger","Bramble","Petal","Pebble","Bamboo","Clover","Biscuit","Maple","Pudding","Sunny","Tumble"];
+const friendName=i=>{const pool=NAMES.map(n=>n[0]).concat(EXTRA).filter(n=>n.toLowerCase()!==avName());return `${pool[i%pool.length]} the ${SP[i%6]}`};
 
 /* ---------- state ---------- */
 let S={stars:0,level:0,top:0,done:[0,0,0,0],mute:false,streak:0};
