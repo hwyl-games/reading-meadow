@@ -1,12 +1,567 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<title>Reading Meadow</title>
-<meta http-equiv="refresh" content="0; url=reading-meadow.html">
-<link rel="canonical" href="reading-meadow.html">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Meadow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* TONE: warm, gentle, encouraging picture-book for a 7-year-old
+   IDEA: a storybook meadow; read the sentence, then find the animal it describes
+   PICTURE: three hand-drawn animals in hats, scarves, glasses and balloons, standing on grass
+   COLOUR and TYPE: sky blue, meadow green, sunshine yellow, pink buttons; Fredoka titles, Andika (made for new readers)
+   LAYOUT: small header, one big story card with three picture tiles, meadow of friends below */
+:root{color-scheme:light dark;
+--sky:light-dark(#bfe6ff,#1d2650);--sky2:light-dark(#e9f7ff,#2c3770);
+--grass:light-dark(#7fd06c,#2f6a42);--mink:light-dark(#163314,#eaffe5);
+--card:light-dark(#fffdf7,#262d4d);--ink:light-dark(#2b2340,#f6f3ff);--soft:light-dark(#6b6385,#c4bfe0);
+--line:light-dark(#e8dfcc,#3d4570);--tint:light-dark(#f4efe2,#1f2542);
+--sun:#ffc83a;--pink:#ff6f9f;--ok:#2fb465}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}[hidden]{display:none!important}
+body{margin:0;background:var(--sky);color:var(--ink);font:18px/1.5 Andika,"Comic Sans MS",system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:4px solid var(--sun);outline-offset:3px}
+.wrap{max-width:820px;margin:0 auto;padding:0 max(3vw,12px)}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:14px}
+h1{font:600 clamp(26px,6vw,34px)/1.05 Fredoka,sans-serif;margin:0}
+.tools{display:flex;gap:8px;align-items:center}
+.pill{background:var(--card);border:0;border-radius:999px;padding:8px 16px;min-height:44px;font:600 20px Fredoka,sans-serif;display:flex;align-items:center;gap:6px;box-shadow:0 3px 0 rgba(0,0,0,.08)}
+.pill svg{display:block}
+.streak{color:#c9c3d6}.streak.hot{color:#ff7a2e}
+.streak.bump{animation:bump .5s}.streak.oops{animation:wig .4s}
+@keyframes bump{40%{transform:scale(1.3)}}
+.lvbar{position:relative;height:66px;margin:14px 16px 4px}
+.track{position:absolute;left:0;right:0;top:36px;height:18px;border-radius:999px;background:rgba(255,255,255,.6);overflow:hidden;box-shadow:inset 0 2px 0 rgba(0,0,0,.08)}
+.track i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--sun));border-radius:999px;transition:width .6s}
+.mk{position:absolute;top:30px;width:30px;height:30px;margin-left:-15px;border-radius:50%;background:var(--card);border:3px solid #fff;display:grid;place-items:center;font:600 15px Fredoka,sans-serif;color:var(--soft)}
+.mk.got{background:var(--ok);color:#fff}
+.mk.now{background:var(--sun);color:#2b2340;transform:scale(1.25)}
+.runner{position:absolute;top:-8px;width:38px;margin-left:-19px;transition:left .6s;animation:bob 2.4s ease-in-out infinite}
+.runner svg{display:block;width:100%;height:auto}
+.lvnote{font-size:15px;opacity:.85;margin:2px 0 0;min-height:22px}
+.card{background:var(--card);border-radius:28px;box-shadow:0 8px 0 rgba(0,0,0,.08);overflow:hidden;margin:12px 0 0}
+.body{padding:22px clamp(14px,4vw,36px) 26px}
+.story{font-size:clamp(26px,6.2vw,38px);line-height:1.5;margin:0 0 10px;letter-spacing:.01em;word-spacing:.12em}
+.q{font:600 clamp(22px,5vw,28px)/1.25 Fredoka,sans-serif;margin:8px 0 14px;color:var(--pink)}
+.answers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,2vw,16px)}
+.tile{border:4px solid var(--line);border-radius:22px;padding:8px 4px 0;background:linear-gradient(#e2f4ff 0 64%,#a6dc90 64%);display:block;transition:opacity .3s}
+.tile svg{display:block;width:100%;height:auto}
+.tile:active{transform:scale(.97)}
+.tile.right{border-color:var(--ok);box-shadow:0 0 0 5px color-mix(in srgb,var(--ok) 35%,transparent);animation:hop .55s 2}
+.tile.nope{animation:wig .4s;opacity:.3}
+.tile:disabled{cursor:default}
+.scene{position:relative;height:200px;background:radial-gradient(ellipse 75% 56px at 50% 100%,var(--grass) 98%,transparent 100%),linear-gradient(var(--sky2),var(--sky))}
+.scene::before{content:"";position:absolute;right:9%;top:18px;width:46px;height:46px;border-radius:50%;background:var(--sun);box-shadow:0 0 0 10px color-mix(in srgb,var(--sun) 30%,transparent)}
+.hero{position:absolute;left:50%;bottom:8px;width:150px;margin-left:-75px}
+.hero.yay{animation:hop .55s 2}
+.train{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end;margin:4px 0 22px;padding:12px 12px 18px;border-radius:18px;background:var(--tint)}
+.eng{width:76px;flex:none}
+.car{position:relative;min-width:66px;min-height:56px;margin-bottom:8px;border-radius:12px 12px 6px 6px;border:3px dashed var(--soft);display:grid;place-items:center;font-size:clamp(22px,5vw,28px);padding:4px 10px}
+.car::before,.car::after{content:"";position:absolute;bottom:-12px;width:15px;height:15px;border-radius:50%;background:#3a2f4a;left:9px}
+.car::after{left:auto;right:9px}
+.car.full{border:3px solid #3a2f4a;background:var(--sun);color:#2b2340}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chip{font-size:clamp(24px,5.5vw,30px);padding:8px 18px;border-radius:16px;border:3px solid var(--line);background:var(--card);min-height:58px}
+.chip.used{visibility:hidden}
+.chip.nope{animation:wig .4s}
+.msg{min-height:32px;margin:16px 0 0;font:600 21px Fredoka,sans-serif;text-align:center}
+.msg.good{color:var(--ok)}
+.next{display:block;margin:12px auto 0;background:var(--pink);color:#fff;border:0;border-radius:999px;padding:14px 34px;font:600 22px Fredoka,sans-serif;box-shadow:0 5px 0 #d14d7c}
+.next:active{transform:translateY(3px);box-shadow:0 2px 0 #d14d7c}
+.meadow{background:var(--grass);color:var(--mink);margin-top:26px;padding:22px 0 44px;min-height:240px}
+.meadow h2{font:600 24px Fredoka,sans-serif;margin:0 0 10px}
+.friends{display:flex;flex-wrap:wrap;gap:4px 8px;margin:0 0 16px}
+.f{width:76px;display:inline-block;animation:bob 3s ease-in-out infinite}
+.f svg{display:block;width:100%;height:auto}
+.f:nth-child(odd){animation-delay:.8s}.f:nth-child(3n){animation-delay:1.6s}
+.dance .f{animation:dance .42s ease-in-out infinite alternate;animation-delay:0s}
+.dance .f:nth-child(even){animation-direction:alternate-reverse}
+@keyframes dance{from{transform:translateY(0) rotate(-12deg)}to{transform:translateY(-18px) rotate(12deg) scale(1.08)}}
+.bar{height:16px;border-radius:999px;background:rgba(255,255,255,.45);overflow:hidden;max-width:420px}
+.bar i{display:block;height:100%;background:var(--sun);border-radius:999px;transition:width .5s}
+.empty{margin:0;font-size:18px;max-width:520px;min-height:60px}
+.nextf{margin:6px 0 0;font-size:17px}
+.reset{background:none;border:0;text-decoration:underline;color:var(--mink);font-size:15px;padding:10px 0;margin-top:18px;min-height:44px}
+.sure{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:16px;margin-top:18px}
+.sure button{border:0;border-radius:999px;padding:8px 18px;min-height:44px;background:var(--card)}
+.pop{position:fixed;inset:0;background:rgba(20,15,40,.5);display:grid;place-items:center;padding:20px;z-index:20}
+.pop>div{background:var(--card);border-radius:28px;padding:24px;text-align:center;max-width:380px;width:100%;animation:popin .35s}
+.pop .big{width:150px;margin:0 auto}
+.pop .big svg{display:block;width:100%;height:auto}
+.pop h3{font:600 28px/1.15 Fredoka,sans-serif;margin:8px 0}
+.pop p{margin:0 0 6px;font-size:20px}
+.cf{position:fixed;top:-30px;width:12px;height:14px;pointer-events:none;z-index:30;animation:fall 1.7s ease-in forwards}
+.rave{position:fixed;inset:0;z-index:25;background:radial-gradient(ellipse at 50% 110%,#3a1060 0,#140a30 55%,#07051a 100%);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;transition:opacity .6s}
+.rave.out{opacity:0}
+.haze{position:absolute;inset:0;background:radial-gradient(40% 30% at 30% 40%,rgba(255,80,200,.25),transparent),radial-gradient(40% 30% at 70% 35%,rgba(60,220,255,.22),transparent);animation:haze 3.6s ease-in-out infinite alternate}
+@keyframes haze{to{transform:translateX(6%) scale(1.15);filter:hue-rotate(90deg)}}
+.beam{position:absolute;bottom:-20px;width:5px;height:150vmax;margin-left:-2.5px;transform-origin:50% 100%;background:linear-gradient(to top,var(--c),transparent 85%);box-shadow:0 0 10px var(--c),0 0 26px var(--c);border-radius:4px;opacity:.35;mix-blend-mode:screen;animation:sweep var(--d) ease-in-out infinite alternate;transition:opacity .4s}
+.rave.drop .beam{opacity:.95}
+@keyframes sweep{from{transform:rotate(var(--a1))}to{transform:rotate(var(--a2))}}
+.ball{position:absolute;top:-6px;left:50%;width:92px;margin-left:-46px;opacity:.7;transition:opacity .4s}
+.rave.drop .ball{opacity:1}
+.ball .spin{animation:spin 4s linear infinite;transform-origin:46px 60px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rtitle{position:absolute;top:110px;left:0;right:0;text-align:center;margin:0;font:600 clamp(36px,10vw,64px)/1 Fredoka,sans-serif;color:#fff;text-shadow:0 0 18px #ff4fd8,0 0 36px #3de0ff;animation:beat .47s ease-in-out infinite alternate}
+@keyframes beat{to{transform:scale(1.08)}}
+.stage{position:relative;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:2px 6px;padding:0 10px 34px;max-width:900px}
+.stage .f{width:clamp(64px,15vw,110px);animation:dance .3s ease-in-out infinite alternate}
+.stage .f:nth-child(even){animation-direction:alternate-reverse}
+.floor{position:absolute;left:0;right:0;bottom:0;height:34px;background:repeating-linear-gradient(90deg,#ff4fd8 0 25%,#3de0ff 25% 50%,#ffe14f 50% 75%,#5dff8a 75% 100%);background-size:200px 100%;opacity:.55;animation:floor 1.9s linear infinite}
+@keyframes floor{to{background-position:200px 0}}
+.mk.shake{animation:shake .75s ease-in-out}
+@keyframes shake{20%{transform:rotate(-20deg) scale(1.2)}40%{transform:rotate(18deg) scale(1.25)}60%{transform:rotate(-14deg) scale(1.3)}80%{transform:rotate(12deg) scale(1.35)}}
+.mk.burst{animation:mkpop .6s ease-out}
+@keyframes mkpop{0%{transform:scale(.3)}60%{transform:scale(1.9)}100%{transform:scale(1.25)}}
+.runner.leap{animation:leap .5s ease-in-out 3}
+@keyframes leap{50%{transform:translateY(-22px) rotate(-10deg)}}
+.spark{position:fixed;width:9px;height:9px;border-radius:50%;pointer-events:none;z-index:40;animation:spark 1s ease-out forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:6px;margin:10px 0 14px}
+.pod{width:31%;display:flex;flex-direction:column;align-items:center}
+.pod svg{display:block;width:100%;height:auto}
+.pod b{display:block;width:100%;border-radius:10px 10px 4px 4px;background:var(--sun);border:3px solid #3a2f4a;font:600 22px Fredoka,sans-serif;color:#2b2340;text-align:center;padding-top:4px}
+.pod:nth-child(1) b{height:44px;background:#cfd6e6}.pod:nth-child(2) b{height:66px}.pod:nth-child(3) b{height:32px;background:#e9b07a}
+.pod:nth-child(2) svg{animation:leap .55s ease-in-out infinite}
+.medal{width:120px;margin:0 auto;animation:popin .5s,swing 2.4s ease-in-out .5s infinite}
+.medal svg{display:block;width:100%;height:auto}
+@keyframes swing{50%{transform:rotate(6deg)}}
+.shelfwrap h3{font:600 20px Fredoka,sans-serif;margin:0 0 6px}
+.shelf{display:flex;gap:14px;align-items:flex-end;padding:0 12px 6px;border-bottom:10px solid #9a6a3f;border-radius:0 0 6px 6px;margin:0 0 18px;max-width:420px;min-height:80px}
+.shelf .m{width:64px}.shelf .m svg{display:block;width:100%;height:auto}
+.shelf .slot{width:64px;height:64px;margin-bottom:12px;border:3px dashed rgba(0,0,0,.25);border-radius:50%;display:grid;place-items:center;color:rgba(0,0,0,.35);font:600 20px Fredoka,sans-serif}
+.maker{max-height:94vh;overflow:auto;max-width:480px!important;padding:20px 16px!important}
+.avprev{width:120px;margin:0 auto 4px}.avprev svg{display:block;width:100%;height:auto}
+.lab{font:600 18px Fredoka,sans-serif!important;margin:14px 0 6px!important}
+.opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.opt{width:58px;padding:4px;border:3px solid var(--line);border-radius:14px;background:light-dark(#e2f4ff,#2c3770)}
+.opt svg{display:block;width:100%;height:auto}
+.opt.pt{width:74px;padding:6px}
+.opt.sel{border-color:var(--pink);box-shadow:0 0 0 3px color-mix(in srgb,var(--pink) 35%,transparent)}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line)}
+.sw.sel{box-shadow:0 0 0 4px var(--pink)}
+.sw.none{width:auto;border-radius:999px;padding:0 14px;background:var(--card);font-size:15px}
+#avname{width:100%;font:22px Andika,sans-serif;padding:10px 14px;border:3px solid var(--line);border-radius:14px;text-align:center;background:var(--card);color:var(--ink)}
+#avname:focus{outline:4px solid var(--sun);outline-offset:2px}
+.stage .f.me{width:clamp(84px,20vw,140px)}
+.podname{font:600 20px Fredoka,sans-serif;color:var(--pink);margin:-6px 0 8px!important}
+@keyframes fall{to{transform:translateY(115vh) rotate(600deg)}}
+@keyframes wig{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+@keyframes hop{40%{transform:translateY(-18px)}}
+@keyframes bob{50%{transform:translateY(-5px)}}
+@keyframes popin{from{transform:scale(.6);opacity:0}}
+@media(max-width:520px){.f{width:62px}.scene{height:180px}.hero{width:130px;margin-left:-65px}.tile{border-radius:16px;border-width:3px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-<p><a href="reading-meadow.html">Go to Reading Meadow</a></p>
+<div class="wrap">
+  <header class="top">
+    <h1>Story Meadow</h1>
+    <div class="tools">
+      <button class="pill" id="mute" aria-label="Sound on or off"></button>
+      <div class="pill streak" id="streakpill" aria-label="Right answers in a row"><span id="flame"></span><span id="streak">0</span></div>
+      <div class="pill" aria-label="Stars"><span id="staricon"></span><span id="stars">0</span></div>
+    </div>
+  </header>
+  <div class="lvbar" id="levels" aria-label="Level progress"></div>
+  <p class="lvnote" id="lvnote"></p>
+  <main class="card" id="card" aria-live="polite"></main>
+</div>
+<section class="meadow">
+  <div class="wrap">
+    <div class="shelfwrap"><h3>My medals</h3><div class="shelf" id="shelf"></div></div>
+    <h2>My meadow friends</h2>
+    <div class="friends" id="friends"></div>
+    <div class="bar"><i id="barfill" style="width:0"></i></div>
+    <p class="nextf" id="nextf"></p>
+    <div id="resetbox"><button class="reset" id="reset">Start over</button></div>
+  </div>
+</section>
+<div id="popwrap"></div>
+
+<script>
+{
+const OL="#3a2f4a";
+const C={red:"#e8433f",blue:"#3d7be0",green:"#34a853",yellow:"#f7c623",purple:"#9b59d0"};
+const COLS1=["red","blue","green","yellow"],COLS=[...COLS1,"purple"];
+const MOODS1=["happy","sad","cross","sleepy"],MOODS=[...MOODS1,"surprised"];
+const SP=["bunny","cat","bear","pig","mouse","panda"];
+const BODY={bunny:"#f7f3ee",cat:"#f2a65a",bear:"#a8754f",pig:"#f6b3c2",mouse:"#bdb8cb",panda:"#f7f3ee"};
+const KW={hat:"hat",scarf:"scarf",bal:"balloon"};
+const NAMES=[["Mary","f"],["Tom","m"],["Pip","m"],["Bella","f"],["Max","m"],["Luna","f"],["Ben","m"],["Rosie","f"],["Sam","m"],["Lily","f"],["Fred","m"],["Ella","f"]];
+const FN=["Hoppy","Ginger","Bramble","Petal","Pebble","Bamboo"];
+const PER=5,KEY="storyMeadow2";
+const CHEER=["Yay! Brilliant reading!","Super star!","Wow, you got it!","Amazing! The animals are cheering!","Fantastic!"];
+const OOPS=["Not quite. Read the story again!","Ooh, so close! Look carefully.","Have another read. You can do it!"];
+
+/* ---------- drawing ---------- */
+let UID=0;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>`&#${c.charCodeAt(0)};`);
+function patFill(pt,x0,y0,w,hh){let o="";
+  if(pt==="stripes")for(let x=x0-hh;x<x0+w;x+=8)o+=`<path d="M${x} ${y0+hh} L${x+hh*.5} ${y0}" stroke="#fff" stroke-width="3.5"/>`;
+  if(pt==="spots"){let r=0;for(let y=y0+4;y<y0+hh;y+=7,r++)for(let x=x0+3+(r%2)*4;x<x0+w;x+=8)o+=`<circle cx="${x}" cy="${y}" r="2.2" fill="#fff"/>`}
+  if(pt==="zigzag")for(let y=y0+5;y<y0+hh;y+=9){let pts="";for(let x=x0,k=0;x<=x0+w;x+=5,k++)pts+=`${x},${y+(k%2?4:0)} `;o+=`<polyline points="${pts}" fill="none" stroke="#fff" stroke-width="2"/>`}
+  return `<g opacity=".85">${o}</g>`}
+function animal(a){
+  const b=BODY[a.sp],s=`stroke="${OL}" stroke-width="2.5" stroke-linejoin="round"`,dk="#2e2a35",pk="#f7a9bc";
+  const limb=a.sp==="panda"?dk:b;let g="";
+  if(a.bal){const c=C[a.bal];g+=`<path d="M93 98 Q101 72 103 46" fill="none" stroke="${OL}" stroke-width="1.6"/><ellipse cx="103" cy="29" rx="13" ry="16" fill="${c}" ${s}/><path d="M100 45 l3 4 l3 -4z" fill="${c}" ${s}/><ellipse cx="98" cy="23" rx="3" ry="5" fill="#fff" opacity=".55"/>`}
+  g+=`<ellipse cx="47" cy="134" rx="10" ry="5.5" fill="${limb}" ${s}/><ellipse cx="73" cy="134" rx="10" ry="5.5" fill="${limb}" ${s}/>`;
+  const E={
+    bunny:`<ellipse cx="46" cy="24" rx="9" ry="22" fill="${b}" ${s}/><ellipse cx="74" cy="24" rx="9" ry="22" fill="${b}" ${s}/><ellipse cx="46" cy="27" rx="4" ry="14" fill="${pk}"/><ellipse cx="74" cy="27" rx="4" ry="14" fill="${pk}"/>`,
+    cat:`<path d="M33 52 L37 20 L59 38Z" fill="${b}" ${s}/><path d="M87 52 L83 20 L61 38Z" fill="${b}" ${s}/><path d="M39 42 L40 28 L50 37Z" fill="${pk}"/><path d="M81 42 L80 28 L70 37Z" fill="${pk}"/>`,
+    bear:`<circle cx="37" cy="40" r="11" fill="${b}" ${s}/><circle cx="83" cy="40" r="11" fill="${b}" ${s}/><circle cx="37" cy="40" r="5" fill="#7a5236"/><circle cx="83" cy="40" r="5" fill="#7a5236"/>`,
+    pig:`<path d="M35 46 L39 24 L56 37Z" fill="${b}" ${s}/><path d="M85 46 L81 24 L64 37Z" fill="${b}" ${s}/>`,
+    mouse:`<circle cx="33" cy="42" r="16" fill="${b}" ${s}/><circle cx="87" cy="42" r="16" fill="${b}" ${s}/><circle cx="33" cy="42" r="8" fill="${pk}"/><circle cx="87" cy="42" r="8" fill="${pk}"/>`,
+    panda:`<circle cx="38" cy="40" r="11" fill="${dk}" ${s}/><circle cx="82" cy="40" r="11" fill="${dk}" ${s}/>`};
+  g+=E[a.sp];
+  g+=`<ellipse cx="60" cy="112" rx="29" ry="24" fill="${b}" ${s}/>`;
+  g+=`<ellipse cx="33" cy="109" rx="7" ry="11" fill="${limb}" ${s} transform="rotate(20 33 109)"/>`;
+  g+=a.bal?`<ellipse cx="90" cy="101" rx="7" ry="11" fill="${limb}" ${s} transform="rotate(-40 90 101)"/>`:`<ellipse cx="87" cy="109" rx="7" ry="11" fill="${limb}" ${s} transform="rotate(-20 87 109)"/>`;
+  g+=`<circle cx="60" cy="64" r="30" fill="${b}" ${s}/>`;
+  if(a.sp==="panda")g+=`<ellipse cx="49" cy="63" rx="7.5" ry="9.5" fill="${dk}" transform="rotate(25 49 63)"/><ellipse cx="71" cy="63" rx="7.5" ry="9.5" fill="${dk}" transform="rotate(-25 71 63)"/>`;
+  const m=a.mood||"happy",ec=a.sp==="panda"?"#fff":OL,ln=`fill="none" stroke-width="2.5" stroke-linecap="round"`;
+  if(m==="sleepy")g+=`<path d="M45.5 61 Q50 66 54.5 61M65.5 61 Q70 66 74.5 61" stroke="${ec}" ${ln}/><text x="4" y="40" font-size="15" font-weight="700" fill="${OL}" font-family="sans-serif">z</text><text x="12" y="24" font-size="20" font-weight="700" fill="${OL}" font-family="sans-serif">Z</text>`;
+  else{const r=m==="surprised"?5.2:3.8;
+    g+=`<circle cx="50" cy="62" r="${r}" fill="${ec}"/><circle cx="70" cy="62" r="${r}" fill="${ec}"/>`;
+    g+=a.sp==="panda"?`<circle cx="50.5" cy="62.5" r="2" fill="${OL}"/><circle cx="70.5" cy="62.5" r="2" fill="${OL}"/>`:`<circle cx="51.3" cy="60.8" r="1.4" fill="#fff"/><circle cx="71.3" cy="60.8" r="1.4" fill="#fff"/>`}
+  g+=`<ellipse cx="41" cy="73" rx="5" ry="3" fill="#ff5f7f" opacity="${m==="cross"?.85:.5}"/><ellipse cx="79" cy="73" rx="5" ry="3" fill="#ff5f7f" opacity="${m==="cross"?.85:.5}"/>`;
+  let my=77;
+  if(a.sp==="pig"){g+=`<ellipse cx="60" cy="72" rx="10" ry="7" fill="#f08fa6" ${s}/><circle cx="56.5" cy="72" r="1.8" fill="${OL}"/><circle cx="63.5" cy="72" r="1.8" fill="${OL}"/>`;my=83}
+  else g+=`<ellipse cx="60" cy="69.5" rx="3.6" ry="2.6" fill="${a.sp==="cat"||a.sp==="mouse"?"#e8708f":OL}"/>`;
+  if(a.sp==="cat"||a.sp==="mouse")g+=`<path d="M38 68h-12M38 72l-11 3M82 68h12M82 72l11 3" stroke="${OL}" stroke-width="1.5" stroke-linecap="round"/>`;
+  const MOUTH={
+    happy:`<path d="M52 ${my} Q60 ${my+7} 68 ${my}" stroke="${OL}" ${ln}/>`,
+    sad:`<path d="M53 ${my+5} Q60 ${my-1} 67 ${my+5}" stroke="${OL}" ${ln}/>`,
+    cross:`<rect x="52" y="${my}" width="16" height="6" rx="2" fill="#fff" stroke="${OL}" stroke-width="2"/><path d="M57 ${my}v6M63 ${my}v6" stroke="${OL}" stroke-width="1.5"/>`,
+    sleepy:`<ellipse cx="60" cy="${my+3}" rx="3" ry="3.5" fill="${OL}"/>`,
+    surprised:`<ellipse cx="60" cy="${my+3}" rx="4.5" ry="6" fill="${OL}"/>`};
+  g+=MOUTH[m];
+  const by=a.gl?48:54,bc=a.sp==="panda"?dk:OL;
+  if(m==="sad")g+=`<path d="M44 ${by+4} L54 ${by}M76 ${by+4} L66 ${by}" stroke="${bc}" ${ln}/><path d="M45 68 q-3 5 0 7 q3 -2 0 -7z" fill="#5fb6f0" stroke="${OL}" stroke-width="1"/>`;
+  if(m==="cross")g+=`<path d="M43 ${by-1} L55 ${by+4}M77 ${by-1} L65 ${by+4}" stroke="${bc}" stroke-width="3.2" stroke-linecap="round" fill="none"/>`;
+  if(m==="surprised")g+=`<path d="M44 ${by-1} Q49 ${by-6} 54 ${by-1}M66 ${by-1} Q71 ${by-6} 76 ${by-1}" stroke="${bc}" ${ln}/>`;
+  if(a.gl&&!a.shades)g+=`<g fill="rgba(255,255,255,.25)" stroke="${OL}" stroke-width="2.6"><circle cx="50" cy="62" r="9"/><circle cx="70" cy="62" r="9"/></g><path d="M59 61h2M41 60l-9-3M79 60l9-3" stroke="${OL}" stroke-width="2.6" stroke-linecap="round"/>`;
+  if(a.scarf){const c=C[a.scarf],W="M33 87 Q60 100 87 87 L87 97 Q60 110 33 97Z",T="M68 99 L75 123 L65 125 L60 102Z";
+    g+=`<path d="${W}" fill="${c}"/><path d="${T}" fill="${c}"/>`;
+    if(a.pat&&a.pat!=="plain"){const id="sc"+(++UID);g+=`<clipPath id="${id}"><path d="${W}"/><path d="${T}"/></clipPath><g clip-path="url(#${id})">${patFill(a.pat,28,82,64,46)}</g>`}
+    else g+=`<path d="M66 112 l8 -2M67 118 l8 -2" stroke="#fff" stroke-width="2" opacity=".6"/>`;
+    g+=`<path d="${W}" fill="none" ${s}/><path d="${T}" fill="none" ${s}/>`}
+  if(a.shades)g+=`<path d="M37 55 h21 v6 q0 9 -10.5 9 q-10.5 0 -10.5 -9z M62 55 h21 v6 q0 9 -10.5 9 q-10.5 0 -10.5 -9z" fill="#141022" stroke="${OL}" stroke-width="2"/><path d="M58 57h4M37 56l-8-3M83 56l8-3" stroke="${OL}" stroke-width="2.5" stroke-linecap="round"/><path d="M41 59h6M66 59h6" stroke="#9ff2ff" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>`;
+  if(a.hat){const c=C[a.hat];g+=`<path d="M31 50 Q31 17 60 17 Q89 17 89 50Z" fill="${c}" ${s}/><rect x="28" y="44" width="64" height="11" rx="5.5" fill="${c}" ${s}/><rect x="31" y="47" width="58" height="3" rx="1.5" fill="#fff" opacity=".45"/><circle cx="60" cy="15" r="7" fill="#fff" ${s}/>`}
+  return `<svg viewBox="0 0 120 142" aria-hidden="true">${g}</svg>`;
+}
+const STAR=(w,f="#ffc83a")=>`<svg viewBox="0 0 24 24" width="${w}" height="${w}" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17.1l-5.9 3.2 1.3-6.5L2.5 9.3l6.6-.8z" fill="${f}" stroke="${OL}" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+const SPK='<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+const MUTE='<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const LOCK='<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>';
+const ENGINE=`<svg class="eng" viewBox="0 0 80 64" aria-hidden="true"><rect x="6" y="26" width="50" height="24" rx="5" fill="#ff6f9f" stroke="${OL}" stroke-width="2.5"/><rect x="40" y="10" width="26" height="40" rx="4" fill="#3d7be0" stroke="${OL}" stroke-width="2.5"/><rect x="46" y="16" width="14" height="12" rx="2" fill="#e2f4ff" stroke="${OL}" stroke-width="2"/><rect x="12" y="12" width="10" height="16" rx="2" fill="${OL}"/><circle cx="17" cy="7" r="5" fill="#fff" opacity=".8"/><circle cx="18" cy="54" r="8" fill="${OL}"/><circle cx="50" cy="54" r="8" fill="${OL}"/></svg>`;
+
+/* ---------- story makers ---------- */
+const $=s=>document.querySelector(s);
+const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const one=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+let lastName="";
+const avName=()=>(S.av&&S.av.name||"").trim().toLowerCase();
+const who=()=>{const pool=NAMES.filter(x=>x[0].toLowerCase()!==avName());let n;do{n=one(pool)}while(n[0]===lastName);lastName=n[0];const f=n[1]==="f";return{N:n[0],he:f?"she":"he",He:f?"She":"He"}};
+const kinds=()=>shuffle(["hat","scarf","bal"]);
+const wear=(P,k,c)=>k==="bal"?`${P.He} is holding a ${c} balloon.`:`${P.He} is wearing a ${c} ${KW[k]}.`;
+const A=(sp,o)=>Object.assign({sp},o);
+const GEN=[
+ [ // Level 1: one thing to spot
+  ()=>{const P=who(),sp=one(SP),k=kinds()[0],c=shuffle(COLS1);return{s:`${P.N} has a ${c[0]} ${KW[k]}.`,q:`Which one is ${P.N}?`,o:c.slice(0,3).map(x=>A(sp,{[k]:x}))}},
+  ()=>{const sp=shuffle(SP),k=kinds()[0],c=one(COLS1);return{s:`The ${sp[0]} has a ${c} ${KW[k]}.`,q:"Which one is it?",o:sp.slice(0,3).map(x=>A(x,{[k]:c}))}},
+  ()=>{const P=who(),sp=one(SP),m=shuffle(MOODS1),k=kinds()[0],c=one(COLS1);return{s:`${P.N} is ${m[0]}.`,q:`How does ${P.N} feel? Tap the right face.`,o:m.slice(0,3).map(x=>A(sp,{mood:x,[k]:c}))}}
+ ],
+ [ // Level 2: two things to spot
+  ()=>{const P=who(),sp=one(SP),[k1,k2]=kinds(),c=shuffle(COLS);return{s:`${P.N} has a ${c[0]} ${KW[k1]} and a ${c[1]} ${KW[k2]}.`,q:`Which one is ${P.N}?`,o:[A(sp,{[k1]:c[0],[k2]:c[1]}),A(sp,{[k1]:c[1],[k2]:c[0]}),A(sp,{[k1]:c[0],[k2]:c[2]})]}},
+  ()=>{const P=who(),sp=shuffle(SP),k=kinds()[0],c=shuffle(COLS);return{s:`${P.N} is a ${sp[0]}. ${wear(P,k,c[0])}`,q:`Which one is ${P.N}?`,o:[A(sp[0],{[k]:c[0]}),A(sp[1],{[k]:c[0]}),A(sp[0],{[k]:c[1]})]}},
+  ()=>{const P=who(),sp=one(SP),k=kinds()[0],c=shuffle(COLS);return{s:`${P.N} has glasses and a ${c[0]} ${KW[k]}.`,q:`Which one is ${P.N}?`,o:[A(sp,{gl:1,[k]:c[0]}),A(sp,{[k]:c[0]}),A(sp,{gl:1,[k]:c[1]})]}},
+  ()=>{const P=who(),sp=one(SP),m=shuffle(MOODS1),k=kinds()[0],c=shuffle(COLS);return{s:`${P.N} feels ${m[0]}. ${wear(P,k,c[0])}`,q:`Which one is ${P.N}?`,o:[A(sp,{mood:m[0],[k]:c[0]}),A(sp,{mood:m[1],[k]:c[0]}),A(sp,{mood:m[2],[k]:c[1]})]}}
+ ],
+ [ // Level 3: longer stories, "not", feelings
+  ()=>{const P=who(),sp=one(SP),m=shuffle(MOODS),c=shuffle(COLS);return{s:`${P.N} feels ${m[0]} today. ${P.He} has a ${c[0]} hat and a ${c[1]} scarf.`,q:`Which one is ${P.N}?`,o:[A(sp,{mood:m[0],hat:c[0],scarf:c[1]}),A(sp,{mood:m[1],hat:c[0],scarf:c[1]}),A(sp,{mood:m[2],hat:c[1],scarf:c[0]})]}},
+  ()=>{const P=who(),sp=one(SP),[k1,k2]=kinds(),c=shuffle(COLS);return{s:`${P.N} has a ${c[0]} ${KW[k1]}, but ${P.he} does not have a ${KW[k2]}.`,q:`Which one is ${P.N}?`,o:[A(sp,{[k1]:c[0]}),A(sp,{[k1]:c[0],[k2]:c[1]}),A(sp,{[k1]:c[1]})]}},
+  ()=>{const P=who(),sp=shuffle(SP),k=kinds()[0],c=one(COLS),m=shuffle(MOODS);return{s:`${P.N} is a ${m[0]} little ${sp[0]} with a ${c} ${KW[k]}.`,q:`Which one is ${P.N}?`,o:[A(sp[0],{mood:m[0],[k]:c}),A(sp[1],{mood:m[1],[k]:c}),A(sp[0],{mood:m[2],[k]:c})]}},
+  ()=>{const P=who(),sp=one(SP),c=shuffle(COLS);return{s:`${P.N} has a ${c[0]} hat, a ${c[1]} scarf and glasses.`,q:`Which one is ${P.N}?`,o:[A(sp,{hat:c[0],scarf:c[1],gl:1}),A(sp,{hat:c[0],scarf:c[1]}),A(sp,{hat:c[0],scarf:c[2],gl:1})]}}
+ ],
+ [ // Level 4: work it out from clues
+  ()=>{const P=who(),sp=one(SP),m=shuffle(MOODS),k=kinds()[0],c=shuffle(COLS);const why={
+      happy:`It is ${P.N}'s birthday, and ${P.he} got the present ${P.he} wanted most.`,
+      sad:`${P.N}'s best friend has moved far away, and ${P.he} misses her.`,
+      cross:`Someone knocked over ${P.N}'s tall tower of blocks on purpose.`,
+      sleepy:`It is very late at night, and ${P.N} can hardly keep ${P.he==="she"?"her":"his"} eyes open.`,
+      surprised:`${P.N} opened a box, and a frog jumped out at ${P.he==="she"?"her":"him"}!`}[m[0]];
+    return{s:`${why} ${wear(P,k,c[0])}`,q:`How does ${P.N} feel? Which one is ${P.he==="she"?"she":"he"}?`,o:[A(sp,{mood:m[0],[k]:c[0]}),A(sp,{mood:m[1],[k]:c[0]}),A(sp,{mood:m[2],[k]:c[1]})]}},
+  ()=>{const P1=who(),P2=who(),sp=one(SP),c=shuffle(COLS);return{s:`${P1.N} and ${P2.N} are best friends. ${P1.N} has a ${c[0]} hat. ${P2.N} has a scarf that is the same colour as ${P1.N}'s hat.`,q:`Which one is ${P2.N}?`,o:[A(sp,{scarf:c[0]}),A(sp,{hat:c[0]}),A(sp,{scarf:c[1]})]}},
+  ()=>{const sp=shuffle(SP),k=kinds()[0],c=one(COLS);const clue={bunny:"This animal has long floppy ears and a fluffy tail.",cat:"This animal has pointy ears and long whiskers. It says miaow.",bear:"This big brown animal has small round ears and loves honey.",pig:"This pink animal has a round snout and says oink.",mouse:"This small grey animal has big round ears and loves cheese.",panda:"This animal is black and white and eats bamboo."}[sp[0]];
+    return{s:`${clue} It is ${k==="bal"?"holding":"wearing"} a ${c} ${KW[k]}.`,q:"Which animal is it?",o:sp.slice(0,3).map(x=>A(x,{[k]:c}))}},
+  ()=>{const P=who(),sp=one(SP),c=shuffle(COLS);return{s:`${P.N} is wearing a scarf, but it is not ${c[1]} and it is not ${c[2]}. ${P.He} is not wearing a hat.`,q:`Which one is ${P.N}?`,o:[A(sp,{scarf:c[0]}),A(sp,{scarf:c[1]}),A(sp,{scarf:c[0],hat:c[2]})]}},
+  ()=>{const P=who(),sp=one(SP),c=shuffle(COLS),m=shuffle(MOODS);return{s:`${P.N} let go of ${P.he==="she"?"her":"his"} ${c[0]} balloon, and it floated away. Now ${P.he} only has ${P.he==="she"?"her":"his"} ${c[1]} hat.`,q:`Which one is ${P.N} now?`,o:[A(sp,{hat:c[1]}),A(sp,{hat:c[1],bal:c[0]}),A(sp,{hat:c[0]})]}}
+ ]];
+const trainStory=lv=>{const P=who(),sp=one(SP),k=kinds()[0],c=one(lv?COLS:COLS1),m=one(MOODS);
+  if(lv>=2)return{t:1,s:`${P.N} the ${m} ${sp} has a ${c} ${KW[k]}.`,pic:A(sp,{[k]:c,mood:m})};
+  return{t:1,s:lv?`${P.N} the ${sp} has a ${c} ${KW[k]}.`:`${P.N} has a ${c} ${KW[k]}.`,pic:A(sp,{[k]:c})}};
+const LV=[{name:"Level 1",need:20},{name:"Level 2",need:20},{name:"Level 3",need:20},{name:"Level 4",need:0}];
+const LAST=LV.length-1;
+const friend=i=>{const k=["hat","scarf","bal"][i%3];return A(SP[i%6],{[k]:COLS[(i*2)%5],gl:i%7===4?1:0})};
+const FMAX=24;
+const FN2=["Clover","Biscuit","Maple","Pudding","Sunny","Tumble"];
+const friendName=i=>{const n=FN[i%6];return `${n.toLowerCase()===avName()?FN2[i%6]:n} the ${SP[i%6]}`};
+
+/* ---------- state ---------- */
+let S={stars:0,level:0,top:0,done:[0,0,0,0],mute:false,streak:0};
+try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&typeof v.stars==="number")S=Object.assign(S,v)}catch(e){}
+while(S.done.length<LV.length)S.done.push(0);delete S.voice;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let ac=null;
+const chime=()=>{if(S.mute)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t0=ac.currentTime;[523,659,784,1047].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain(),t=t0+i*.1;o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.2,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.35);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.4)})}catch(e){}};
+const tune=()=>{if(S.mute)return 0;try{
+  ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();
+  const bpm=128,b=60/bpm,e=b/2,t0=ac.currentTime+.08,hz=n=>440*Math.pow(2,(n-69)/12);
+  const comp=ac.createDynamicsCompressor();comp.threshold.value=-16;comp.ratio.value=4;comp.connect(ac.destination);
+  const master=ac.createGain();master.gain.value=.8;master.connect(comp);
+  const dl=ac.createDelay(1),fb=ac.createGain(),wet=ac.createGain();dl.delayTime.value=e*1.5;fb.gain.value=.32;wet.gain.value=.28;dl.connect(fb).connect(dl);dl.connect(wet).connect(master);
+  const lp=ac.createBiquadFilter();lp.type="lowpass";lp.frequency.value=2400;lp.Q.value=3;lp.connect(master);
+  const nb=ac.createBuffer(1,ac.sampleRate*.6,ac.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  const env=(g,t,a,v,r)=>{g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+r)};
+  const osc=(type,f,t,a,v,r,dests,det=0)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;o.detune.value=det;env(g,t,a,v,r);o.connect(g);dests.forEach(d=>g.connect(d));o.start(t);o.stop(t+a+r+.05)};
+  const kick=t=>{const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(42,t+.13);env(g,t,.004,1,.28);o.connect(g).connect(master);o.start(t);o.stop(t+.35)};
+  const noise=(t,type,f,v,r)=>{const s=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain();s.buffer=nb;fl.type=type;fl.frequency.value=f;env(g,t,.002,v,r);s.connect(fl).connect(g).connect(master);s.start(t);s.stop(t+r+.05)};
+  const CH=[[60,64,67,72],[59,62,67,71],[57,60,64,69],[57,60,65,69]],ROOT=[36,43,45,41];
+  const MEL=[[72,0,76,79,76,0,74,72],[71,0,74,79,0,74,71,67],[69,72,76,0,76,77,76,72],[77,0,76,74,72,0,74,76]];
+  for(let bar=0;bar<4;bar++)for(let s8=0;s8<8;s8++){
+    const t=t0+(bar*8+s8)*e;
+    if(s8%2===0)kick(t);
+    if(s8===2||s8===6)noise(t,"bandpass",1500,.5,.16);
+    if(s8%2===1){noise(t,"highpass",7000,.18,.05);CH[bar].forEach(n=>{osc("sawtooth",hz(n),t,.008,.05,.17,[lp],-8);osc("sawtooth",hz(n),t,.008,.05,.17,[lp],8)})}
+    osc("triangle",hz(ROOT[bar]+(s8%2?12:0)),t,.005,.4,e*.85,[master]);
+    const m=MEL[bar][s8];if(m){osc("square",hz(m),t,.01,.07,e*.9,[master,dl]);osc("sine",hz(m+12),t,.01,.04,e*.7,[master])}
+  }
+  const tf=t0+32*e;kick(tf);noise(tf,"highpass",5000,.35,1.1);
+  [48,60,64,67,72,76].forEach(n=>{osc("sawtooth",hz(n),tf,.01,.05,1.1,[lp],-6);osc("sawtooth",hz(n),tf,.01,.05,1.1,[lp],6)});
+  [72,76,79,84].forEach((n,i)=>osc("triangle",hz(n),tf+i*.07,.01,.12,.5,[master,dl]));
+  return 32*e+1.4}catch(err){return 0}};
+const raveMusic=()=>{if(S.mute)return{dur:0,drop:0};try{
+  ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();
+  const bpm=140,b=60/bpm,x=b/4,t0=ac.currentTime+.08,hz=n=>440*Math.pow(2,(n-69)/12);
+  const comp=ac.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=5;comp.connect(ac.destination);
+  const master=ac.createGain();master.gain.value=.75;master.connect(comp);
+  const pump=ac.createGain();pump.connect(master);
+  const lp=ac.createBiquadFilter();lp.type="lowpass";lp.frequency.value=3200;lp.Q.value=4;lp.connect(pump);
+  const blp=ac.createBiquadFilter();blp.type="lowpass";blp.frequency.value=700;blp.Q.value=8;blp.connect(pump);
+  const alp=ac.createBiquadFilter();alp.type="lowpass";alp.Q.value=10;alp.connect(master);
+  const dl=ac.createDelay(1),fb=ac.createGain(),wet=ac.createGain();dl.delayTime.value=x*3;fb.gain.value=.35;wet.gain.value=.3;dl.connect(fb).connect(dl);dl.connect(wet).connect(master);
+  const nb=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  const env=(g,t,a,v,r)=>{g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+r)};
+  const osc=(type,f,t,a,v,r,dests,det=0)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;o.detune.value=det;env(g,t,a,v,r);o.connect(g);dests.forEach(d=>g.connect(d));o.start(t);o.stop(t+a+r+.05)};
+  const kick=t=>{const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(180,t);o.frequency.exponentialRampToValueAtTime(40,t+.12);env(g,t,.003,1,.3);o.connect(g).connect(master);o.start(t);o.stop(t+.35);
+    pump.gain.setValueAtTime(.15,t);pump.gain.linearRampToValueAtTime(1,t+b*.8)};
+  const noise=(t,type,f,v,r,q=1)=>{const s=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain();s.buffer=nb;fl.type=type;fl.frequency.value=f;fl.Q.value=q;env(g,t,.002,v,r);s.connect(fl).connect(g).connect(master);s.start(t);s.stop(t+r+.05)};
+  const CH=[[57,60,64,69],[53,57,60,65],[55,60,64,67],[55,59,62,67]],ROOT=[45,41,48,43];
+  const LEAD=[[76,0,76,74,76,0,79,76],[77,0,76,74,72,0,74,76],[79,0,76,72,76,0,79,84],[83,0,79,74,79,0,74,71]];
+  const ARP=[69,72,76,81];
+  // build: 2 bars
+  const bEnd=t0+32*x;
+  alp.frequency.setValueAtTime(300,t0);alp.frequency.exponentialRampToValueAtTime(7000,bEnd);
+  for(let i=0;i<32;i++){const t=t0+i*x;osc("square",hz(ARP[i%4]+(i>=16?12:0)),t,.005,.09,x*.8,[alp,dl]);
+    if(i%4===0&&i<16)kick(t);
+    if(i>=16&&(i%2===0||i>=28))noise(t,"bandpass",1800,.25+(i-16)*.025,.09)}
+  const rs=ac.createBufferSource(),rf=ac.createBiquadFilter(),rg=ac.createGain();rs.buffer=nb;rs.loop=true;rf.type="bandpass";rf.Q.value=2;
+  rf.frequency.setValueAtTime(400,t0);rf.frequency.exponentialRampToValueAtTime(9000,bEnd);rg.gain.setValueAtTime(.0001,t0);rg.gain.exponentialRampToValueAtTime(.35,bEnd-.02);rg.gain.setValueAtTime(.0001,bEnd);
+  rs.connect(rf).connect(rg).connect(master);rs.start(t0);rs.stop(bEnd+.05);
+  // drop: 4 bars
+  for(let bar=0;bar<4;bar++)for(let i=0;i<16;i++){
+    const t=bEnd+(bar*16+i)*x;
+    if(i%4===0)kick(t);
+    if(i===4||i===12)noise(t,"bandpass",1600,.55,.15);
+    if(i%4===2)noise(t,"highpass",8000,.25,.09);
+    if(i%4!==0)osc("sawtooth",hz(ROOT[bar]+(i%2?12:0)),t,.004,.3,x*.8,[blp]);
+    if(i===0)CH[bar].forEach(n=>[-14,0,14].forEach(d=>osc("sawtooth",hz(n),t,.02,.045,b*3.6,[lp],d)));
+    if(i%2===0){const m=LEAD[bar][i/2];if(m){osc("square",hz(m),t,.01,.08,x*1.8,[master,dl]);osc("triangle",hz(m+12),t,.01,.05,x*1.5,[master])}}
+  }
+  const tf=bEnd+64*x;kick(tf);noise(tf,"highpass",4000,.4,1.4);
+  [45,57,64,69,72,76].forEach(n=>[-12,12].forEach(d=>osc("sawtooth",hz(n),tf,.01,.05,1.3,[master],d)));
+  return{dur:(tf-t0)+1.5,drop:bEnd-t0}}catch(err){return{dur:0,drop:0}}};
+function rave(){
+  const n=friendCount(S.stars),C=["#ff4fd8","#3de0ff","#5dff8a","#ffe14f","#a66bff"];
+  let beams="";for(let i=0;i<12;i++){const x=[8,25,50,75,92][i%5],a=-55+Math.random()*30,a2=a+60+Math.random()*50;
+    beams+=`<span class="beam" style="left:${x}%;--c:${C[i%5]};--a1:${(i%2?-1:1)*a}deg;--a2:${(i%2?-1:1)*(a2-80)}deg;--d:${(1.4+Math.random()*1.8).toFixed(2)}s;animation-delay:-${(Math.random()*2).toFixed(2)}s"></span>`}
+  const ball=`<svg class="ball" viewBox="0 0 92 100" aria-hidden="true"><path d="M46 0v22" stroke="#bbb" stroke-width="2"/><defs><clipPath id="bc"><circle cx="46" cy="60" r="38"/></clipPath></defs><g clip-path="url(#bc)"><g class="spin"><circle cx="46" cy="60" r="44" fill="#c9d3e6"/>${Array.from({length:54},(_,i)=>{const r=Math.floor(i/9),c=i%9;return `<rect x="${6+c*9}" y="${20+r*14}" width="8" height="12" rx="1.5" fill="${["#fff","#9fb3d6","#ff9fe8","#9ff2ff"][(r+c)%4]}" opacity=".9"/>`}).join("")}</g></g><circle cx="46" cy="60" r="38" fill="none" stroke="#7a86a8" stroke-width="2"/></svg>`;
+  const el=document.createElement("div");el.className="rave";el.setAttribute("role","dialog");el.setAttribute("aria-label","Meadow rave");
+  el.innerHTML=`<div class="haze"></div>${beams}${ball}<p class="rtitle">Meadow Rave!</p><div class="stage">${(()=>{const fs=Array.from({length:n},(_,i)=>`<span class="f">${animal(Object.assign({},friend(i),{shades:1}))}</span>`);fs.splice(Math.floor(fs.length/2),0,`<span class="f me">${animal(Object.assign(AV(),{shades:1}))}</span>`);return fs.join("")})()}</div><div class="floor"></div>`;
+  document.body.appendChild(el);
+  const mus=raveMusic(),dur=(mus.dur||11)*1000;
+  setTimeout(()=>el.classList.add("drop"),(mus.drop||3.4)*1000);
+  setTimeout(()=>{el.classList.add("out");setTimeout(()=>{el.remove();$("#card").scrollIntoView({behavior:calm?"auto":"smooth"});showPop()},650)},dur);
+}
+const MCOL=["#3d7be0","#e8433f","#f7c623"];
+function rosette(i){const c=MCOL[i%3];let p="";for(let k=0;k<16;k++){const a=k/16*Math.PI*2;p+=`<circle cx="${(50+Math.cos(a)*30).toFixed(1)}" cy="${(46+Math.sin(a)*30).toFixed(1)}" r="10" fill="${c}" stroke="${OL}" stroke-width="2"/>`}
+  return `<svg viewBox="0 0 100 130" aria-hidden="true"><path d="M34 70 L22 126 L36 116 L46 128 L52 74Z" fill="${c}" stroke="${OL}" stroke-width="2.5" stroke-linejoin="round"/><path d="M66 70 L78 126 L64 116 L54 128 L48 74Z" fill="${c}" stroke="${OL}" stroke-width="2.5" stroke-linejoin="round"/>${p}<circle cx="50" cy="46" r="27" fill="#fff8dc" stroke="${OL}" stroke-width="2.5"/><circle cx="50" cy="46" r="21" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="3 3"/><text x="50" y="57" text-anchor="middle" font-family="Fredoka,sans-serif" font-weight="600" font-size="30" fill="${OL}">${i+1}</text></svg>`}
+function fireworks(x,y){if(calm)return;const cols=["#ffc83a","#ff6f9f","#3d7be0","#34a853","#9b59d0","#3de0ff"];
+  for(let k=0;k<22;k++){const s=document.createElement("span"),a=k/22*Math.PI*2,r=60+Math.random()*70;s.className="spark";s.style.left=x-4+"px";s.style.top=y-4+"px";s.style.background=one(cols);
+    s.style.setProperty("--dx",Math.cos(a)*r+"px");s.style.setProperty("--dy",Math.sin(a)*r+"px");document.body.appendChild(s);setTimeout(()=>s.remove(),1100)}}
+const fanfare=()=>{if(S.mute)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();const t0=ac.currentTime+.05,hz=n=>440*Math.pow(2,(n-69)/12);
+  const pl=(n,t,d,type,v)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=hz(n);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d+.05)};
+  [[67,0],[67,.15],[67,.3],[72,.45]].forEach(([n,t])=>{pl(n,t0+t,.14,"square",.08);pl(n-12,t0+t,.14,"triangle",.15)});
+  [60,64,67,72,76].forEach(n=>{pl(n,t0+.7,1.3,"sawtooth",.035);pl(n,t0+.7,1.3,"triangle",.07)});pl(84,t0+.7,1,"sine",.08);pl(36,t0+.7,1.2,"triangle",.3)}catch(e){}};
+function levelUp(n){
+  window.scrollTo({top:0,behavior:calm?"auto":"smooth"});
+  setTimeout(()=>{const mk=document.querySelector(".mk.pend");if(mk)mk.classList.add("shake");const rn=document.querySelector(".runner");if(rn)rn.classList.add("leap")},500);
+  setTimeout(()=>{pendingUnlock=null;renderTop();fanfare();
+    const mk=document.querySelector(".mk.now");if(mk){mk.classList.add("burst");const r=mk.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;fireworks(x,y);
+      setTimeout(()=>fireworks(innerWidth*.25,innerHeight*.3),250);setTimeout(()=>fireworks(innerWidth*.75,innerHeight*.25),500);setTimeout(()=>fireworks(x,y),750)}},1350);
+  setTimeout(()=>{
+    const k=friendCount(S.stars),f=[k>=1?animal(friend(k-1)):"",animal(AV()),k>=2?animal(friend(k-2)):""];
+    $("#popwrap").innerHTML=`<div class="pop" role="dialog" aria-modal="true"><div><div class="medal">${rosette(n-1)}</div><h3>Level ${n} complete, ${esc(S.av?S.av.name:"superstar")}!</h3><p>You won a medal! The animals are so proud of you.</p>
+      <div class="podium">${f.map(s=>`<div class="pod">${s}<b></b></div>`).join("")}</div><p class="podname">${esc(S.av?S.av.name:"You")} wins gold!</p><p>Now you're on Level ${n+1}. Ready for trickier stories?</p><button class="next" id="popok">Let's go!</button></div></div>`;
+    [..."213"].forEach((t,i)=>$(".podium").children[i].querySelector("b").textContent=t);
+    confetti();$("#popok").focus();
+    $("#popok").onclick=()=>{$("#popwrap").innerHTML="";popOpen=false;S.level=S.top;save();renderTop();renderMeadow();if(solved){round=0;next()}showPop()};
+  },3300);
+}
+const PATS=["plain","stripes","spots","zigzag"];
+let draft=null;
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const AV=()=>S.av?{sp:S.av.sp,scarf:S.av.scarf,pat:S.av.pat,hat:S.av.hat==="none"?0:S.av.hat}:{sp:"bunny"};
+function makerHTML(){const d=draft,sel=(k,v)=>d[k]===v?" sel":"",prev={sp:d.sp,scarf:d.scarf,pat:d.pat,hat:d.hat==="none"?0:d.hat};
+  return `<h3>Make your reading buddy!</h3><div class="avprev">${animal(prev)}</div>
+  <p class="lab">Pick an animal</p><div class="opts">${SP.map(sp=>`<button class="opt${sel("sp",sp)}" data-k="sp" data-v="${sp}" aria-label="${sp}">${animal({sp})}</button>`).join("")}</div>
+  <p class="lab">Scarf colour</p><div class="opts">${COLS.map(c=>`<button class="sw${sel("scarf",c)}" data-k="scarf" data-v="${c}" aria-label="${c}" style="background:${C[c]}"></button>`).join("")}</div>
+  <p class="lab">Scarf pattern</p><div class="opts">${PATS.map(pt=>{const id="ps"+(++UID);return `<button class="opt pt${sel("pat",pt)}" data-k="pat" data-v="${pt}" aria-label="${pt}"><svg viewBox="0 0 60 26"><clipPath id="${id}"><rect width="60" height="26" rx="7"/></clipPath><g clip-path="url(#${id})"><rect width="60" height="26" fill="${C[d.scarf]}"/>${patFill(pt,0,0,60,26)}</g></svg></button>`}).join("")}</div>
+  <p class="lab">Hat</p><div class="opts"><button class="sw none${sel("hat","none")}" data-k="hat" data-v="none">No hat</button>${COLS.map(c=>`<button class="sw${sel("hat",c)}" data-k="hat" data-v="${c}" aria-label="${c} hat" style="background:${C[c]}"></button>`).join("")}</div>
+  <p class="lab">Give your buddy a name</p><input id="avname" maxlength="12" autocomplete="off" placeholder="Type a name" value="${esc(d.name)}">
+  <button class="next" id="avok">That's me!</button>`}
+function avatarMaker(){
+  popOpen=true;draft=S.av?Object.assign({},S.av):{sp:"bunny",scarf:"red",pat:"stripes",hat:"none",name:""};
+  $("#popwrap").innerHTML=`<div class="pop" role="dialog" aria-modal="true" aria-label="Make your reading buddy"><div class="maker" id="maker">${makerHTML()}</div></div>`;
+  const mk=$("#maker");
+  mk.addEventListener("input",e=>{if(e.target.id==="avname")draft.name=e.target.value});
+  mk.addEventListener("keydown",e=>{if(e.target.id==="avname"&&e.key==="Enter")$("#avok").click()});
+  mk.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+    if(b.id==="avok"){const name=draft.name.trim().slice(0,12)||cap(draft.sp);S.av=Object.assign({},draft,{name});save();$("#popwrap").innerHTML="";popOpen=false;renderTop();renderMeadow();if(cur&&!solved&&new RegExp(`\\b${name.replace(/[^A-Za-z]/g,'')}\\b`,'i').test(cur.s)){round--;next()}showPop();return}
+    if(b.dataset.k){draft[b.dataset.k]=b.dataset.v;mk.innerHTML=makerHTML()}});
+}
+function dance(){
+  const fr=$("#friends");$(".meadow").scrollIntoView({behavior:calm?"auto":"smooth",block:"center"});
+  setTimeout(()=>{fr.classList.add("dance");const d=tune()||5;setTimeout(()=>{fr.classList.remove("dance");$("#card").scrollIntoView({behavior:calm?"auto":"smooth"});showPop()},d*1000)},500);
+}
+const friendCount=st=>Math.min(FMAX,Math.floor(st/PER));
+let slip=false,pendingUnlock=null,cur=null,solved=false,pos=0,round=0,lastT=-1;
+
+/* ---------- rendering ---------- */
+function renderTop(){
+  $("#stars").textContent=S.stars;$("#streak").textContent=S.streak;$("#streakpill").classList.toggle("hot",S.streak>0);
+  $("#streakpill").title=S.streak%10===9?"One more for a rave!":`${10-S.streak%10} more in a row for a rave`;
+  $("#mute").innerHTML=S.mute?MUTE:SPK;
+  const span=LV.length-1,pct=S.top>=span?100:(S.top+Math.min(1,S.done[S.top]/LV[S.top].need))/span*100;
+  $("#levels").innerHTML=`<div class="track"><i style="width:${pct}%"></i></div>`+LV.map((l,i)=>`<span class="mk${i<S.top?" got":""}${i===S.top&&i!==pendingUnlock?" now":""}${i===pendingUnlock?" pend":""}" style="left:${i/span*100}%">${i>S.top||i===pendingUnlock?LOCK:i+1}</span>`).join("")+`<span class="runner" style="left:${pct}%">${animal(AV())}</span>`;
+  const left=LV[S.top].need-S.done[S.top];
+  $("#lvnote").textContent=pendingUnlock!=null?"Level complete! Well done!":S.top<LAST?`Level ${S.top+1}: ${Math.max(left,0)} more right answer${left===1?"":"s"} to reach Level ${S.top+2}`:"Level 4: you made it to the top. Superstar reader!";
+}
+function renderMeadow(){
+  $("#shelf").innerHTML=Array.from({length:LAST},(_,i)=>i<S.top&&i+1!==pendingUnlock?`<span class="m" title="Level ${i+1} medal">${rosette(i)}</span>`:`<span class="slot">${i+1}</span>`).join("");
+  const n=friendCount(S.stars);
+  $("#friends").innerHTML=n?Array.from({length:n},(_,i)=>`<span class="f" title="${friendName(i)}">${animal(friend(i))}</span>`).join(""):`<p class="empty">Your meadow is empty. Read stories to earn stars, and animal friends will come to live here!</p>`;
+  const full=n>=FMAX,into=S.stars%PER;
+  $("#barfill").style.width=full?"100%":(into/PER*100)+"%";
+  $("#nextf").textContent=full?"Your meadow is full of friends!":`${PER-into} more star${PER-into===1?"":"s"} until a new friend arrives`;
+}
+const tail=`<p class="msg" id="msg"></p><button class="next" id="next" hidden>Next story &#10140;</button>`;
+function next(){
+  round++;solved=false;pos=0;slip=false;
+  const card=$("#card");
+  if(round%4===0){
+    cur=trainStory(S.level);
+    cur.words=cur.s.replace(/\.$/,"").split(" ");
+    let order=shuffle(cur.words.map((_,i)=>i));
+    if(order.every((v,i)=>v===i))order.reverse();
+    card.innerHTML=`<div class="scene"><div class="hero" id="hero">${animal(cur.pic)}</div></div><div class="body"><p class="q">Word Train! Put the words in order to tell us about this animal.</p>
+      <div class="train">${ENGINE}${cur.words.map(()=>`<span class="car"></span>`).join("")}</div>
+      <div class="chips">${order.map(i=>`<button class="chip" data-w="${cur.words[i]}">${cur.words[i]}</button>`).join("")}</div>
+      ${tail}</div>`;
+    return;
+  }
+  const g=GEN[S.level];let t;do{t=Math.floor(Math.random()*g.length)}while(g.length>1&&t===lastT);lastT=t;
+  cur=g[t]();
+  const opts=shuffle(cur.o.map((o,i)=>({o,ok:i===0})));
+  card.innerHTML=`<div class="body"><p class="story">${cur.s}</p>
+    
+    <p class="q">${cur.q}</p>
+    <div class="answers">${opts.map((x,i)=>`<button class="tile" data-ok="${x.ok?1:0}" aria-label="Picture ${i+1}">${animal(x.o)}</button>`).join("")}</div>${tail}</div>`;
+}
+function confetti(){
+  if(calm)return;
+  const cols=["#ffc83a","#ff6f9f","#3d7be0","#34a853","#9b59d0","#fff"];
+  for(let i=0;i<30;i++){
+    const c=document.createElement("span");c.className="cf";
+    c.style.background=one(cols);c.style.left=Math.random()*100+"vw";c.style.animationDelay=Math.random()*.5+"s";c.style.borderRadius=Math.random()<.5?"50%":"3px";
+    document.body.appendChild(c);setTimeout(()=>c.remove(),2400);
+  }
+}
+const pops=[];let popOpen=false;
+function showPop(){
+  if(popOpen||!pops.length)return;
+  const p=pops.shift();popOpen=true;
+  if(p.levelup!=null){levelUp(p.levelup);return}
+  $("#popwrap").innerHTML=`<div class="pop" role="dialog" aria-modal="true"><div><div class="big">${p.pic}</div><h3>${p.h}</h3><p>${p.p}</p><button class="next" id="popok">${p.b}</button></div></div>`;
+  $("#popok").focus();
+  $("#popok").onclick=()=>{$("#popwrap").innerHTML="";popOpen=false;if(p.go!=null){S.level=p.go;save();renderTop()}if(p.dance==="rave")rave();else if(p.dance)dance();else showPop()};
+  confetti();
+}
+function breakStreak(){slip=true;if(S.streak>0){S.streak=0;save();renderTop();const p=$("#streakpill");p.classList.remove("oops");void p.offsetWidth;p.classList.add("oops")}}
+function win(el){
+  solved=true;
+  const before=friendCount(S.stars);
+  S.stars++;S.done[S.level]++;if(!slip)S.streak++;
+  if(el){el.classList.remove("yay");void el.offsetWidth;el.classList.add("yay")}
+  confetti();chime();
+  const m=$("#msg");m.innerHTML=`${one(CHEER)} +1 ${STAR(22)}${!slip&&S.streak>=2?`<br>${S.streak} in a row!`:""}`;m.className="msg good";
+  $("#next").hidden=false;
+  const after=friendCount(S.stars);
+  const rv=!slip&&S.streak>0&&S.streak%10===0;
+  if(after>before){const i=after-1;pops.push({pic:animal(friend(i)),h:"A new friend!",p:rv?`${friendName(i)} has come to live in your meadow. AND you got ${S.streak} in a row! Time for a MEADOW RAVE!`:`${friendName(i)} has come to live in your meadow. Let's have a party!`,b:rv?"Rave time!":"Party time!",dance:rv?"rave":1})}
+  else if(rv)pops.push({pic:animal(Object.assign(AV(),{shades:1})),h:`${S.streak} in a row!`,p:"What an amazing streak! Time for a MEADOW RAVE!",b:"Rave time!",dance:"rave"});
+  if(S.level===S.top&&S.top<LAST&&S.done[S.top]>=LV[S.top].need){S.top++;S.level=S.top;pendingUnlock=S.top;pops.push({levelup:S.top})}
+  save();renderTop();renderMeadow();
+  if(!slip){const p=$("#streakpill");p.classList.remove("bump");void p.offsetWidth;p.classList.add("bump")}
+  setTimeout(showPop,900);
+}
+
+/* ---------- events ---------- */
+$("#card").addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;
+  if(t.id==="next"){next();window.scrollTo({top:0,behavior:calm?"auto":"smooth"});return}
+  if(solved)return;
+  if(t.classList.contains("tile")){
+    if(t.dataset.ok==="1"){t.classList.add("right");document.querySelectorAll(".tile").forEach(b=>b.disabled=true);win(null)}
+    else{t.classList.add("nope");t.disabled=true;const m=$("#msg");m.textContent=one(OOPS);m.className="msg";breakStreak()}
+    return;
+  }
+  if(t.classList.contains("chip")){
+    const w=t.dataset.w;
+    if(w===cur.words[pos]){
+      t.classList.add("used");t.disabled=true;
+      const car=document.querySelectorAll(".car")[pos];car.textContent=w;car.classList.add("full");pos++;
+      if(pos===cur.words.length){car.textContent=w+".";win($("#hero"))}
+    }else{t.classList.remove("nope");void t.offsetWidth;t.classList.add("nope");const m=$("#msg");m.textContent="Hmm, which word comes next?";m.className="msg";breakStreak()}
+  }
+});
+$("#mute").addEventListener("click",()=>{S.mute=!S.mute;save();renderTop()});
+$("#resetbox").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.id==="reset")$("#resetbox").innerHTML=`<div class="sure">Clear all stars and friends? <button id="yes">Yes, start over</button><button id="no">No, keep them</button></div>`;
+  else{if(b.id==="yes"){S={stars:0,level:0,top:0,done:[0,0,0,0],mute:S.mute,streak:0};save();renderTop();renderMeadow();round=0;next();avatarMaker()}$("#resetbox").innerHTML=`<button class="reset" id="reset">Start over</button>`}
+});
+$("#staricon").innerHTML=STAR(24);$("#flame").innerHTML=`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 2.5c1 3.2 4.8 5.3 4.8 10.2A4.8 4.8 0 0 1 12 21.5a4.8 4.8 0 0 1-4.8-4.8c0-2.4 1.2-3.8 2.3-5 .2 1.6.9 2.6 1.9 3 .3-3.4-1-6.2.6-12.2z" fill="currentColor" stroke="${OL}" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+S.level=S.top;
+renderTop();renderMeadow();next();
+if(!S.av)avatarMaker();
+}
+</script>
 </body>
 </html>
