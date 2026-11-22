@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
 <style>
-/* VOICE: warm, gentle, encouraging picture-book for a 7-year-old
+/* TONE: warm, gentle, encouraging picture-book for a 7-year-old
    IDEA: a storybook meadow; read the sentence, then find the animal it describes
    PICTURE: three hand-drawn animals in hats, scarves, glasses and balloons, standing on grass
    COLOUR and TYPE: sky blue, meadow green, sunshine yellow, pink buttons; Fredoka titles, Andika (made for new readers)
@@ -44,11 +44,6 @@ h1{font:600 clamp(26px,6vw,34px)/1.05 Fredoka,sans-serif;margin:0}
 .card{background:var(--card);border-radius:28px;box-shadow:0 8px 0 rgba(0,0,0,.08);overflow:hidden;margin:12px 0 0}
 .body{padding:22px clamp(14px,4vw,36px) 26px}
 .story{font-size:clamp(26px,6.2vw,38px);line-height:1.5;margin:0 0 10px;letter-spacing:.01em;word-spacing:.12em}
-.w{border-radius:10px;padding:0 3px;cursor:pointer}
-.w.say{background:#ffe27a;color:#2b2340}
-.qrow{display:flex;align-items:center;gap:10px;margin:0 0 12px}
-.spk{width:48px;height:48px;border-radius:50%;border:0;background:var(--sun);color:#2b2340;display:grid;place-items:center;flex:none}
-.hint{font-size:15px;color:var(--soft)}
 .q{font:600 clamp(22px,5vw,28px)/1.25 Fredoka,sans-serif;margin:8px 0 14px;color:var(--pink)}
 .answers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,2vw,16px)}
 .tile{border:4px solid var(--line);border-radius:22px;padding:8px 4px 0;background:linear-gradient(#e2f4ff 0 64%,#a6dc90 64%);display:block;transition:opacity .3s}
@@ -88,8 +83,6 @@ h1{font:600 clamp(26px,6vw,34px)/1.05 Fredoka,sans-serif;margin:0}
 .bar i{display:block;height:100%;background:var(--sun);border-radius:999px;transition:width .5s}
 .empty{margin:0;font-size:18px;max-width:520px;min-height:60px}
 .nextf{margin:6px 0 0;font-size:17px}
-.vpick{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:22px;font-size:15px}
-.vpick select{font:16px Andika,sans-serif;min-height:44px;border-radius:12px;border:0;padding:6px 10px;background:var(--card);color:var(--ink);max-width:100%}
 .reset{background:none;border:0;text-decoration:underline;color:var(--mink);font-size:15px;padding:10px 0;margin-top:18px;min-height:44px}
 .sure{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:16px;margin-top:18px}
 .sure button{border:0;border-radius:999px;padding:8px 18px;min-height:44px;background:var(--card)}
@@ -184,7 +177,6 @@ h1{font:600 clamp(26px,6vw,34px)/1.05 Fredoka,sans-serif;margin:0}
     <div class="friends" id="friends"></div>
     <div class="bar"><i id="barfill" style="width:0"></i></div>
     <p class="nextf" id="nextf"></p>
-    <label class="vpick">Reading voice (for grown-ups) <select id="voice"><option>Default voice</option></select></label>
     <div id="resetbox"><button class="reset" id="reset">Start over</button></div>
   </div>
 </section>
@@ -324,22 +316,8 @@ const friendName=i=>{const n=FN[i%6];return `${n.toLowerCase()===avName()?FN2[i%
 /* ---------- state ---------- */
 let S={stars:0,level:0,top:0,done:[0,0,0,0],mute:false,streak:0};
 try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&typeof v.stars==="number")S=Object.assign(S,v)}catch(e){}
-while(S.done.length<LV.length)S.done.push(0);
+while(S.done.length<LV.length)S.done.push(0);delete S.voice;
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-let voice=null,voices=[];
-const vScore=v=>{let s=0;const n=v.name;
-  if(v.lang==="en-GB"||v.lang==="en_GB")s+=4;else if(/^en/i.test(v.lang))s+=1;else return -99;
-  if(/premium|enhanced|natural|neural/i.test(n))s+=12;
-  if(/google uk english female|sonia|libby|maisie|serena|kate|stephanie|martha|moira|samantha|karen|tessa|daniel|arthur|aria|jenny/i.test(n))s+=5;
-  if(/compact|eloquence|albert|bad news|bahh|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|good news|fred|junior|ralph|grandma|grandpa|rocko|shelley|reed|sandy|flo|eddy/i.test(n))s-=30;
-  return s};
-const pickVoice=()=>{try{
-  voices=speechSynthesis.getVoices().filter(v=>vScore(v)>-50).sort((a,b)=>vScore(b)-vScore(a));
-  voice=voices.find(v=>v.name===S.voice)||voices[0]||null;
-  const sel=document.getElementById("voice");
-  if(sel)sel.innerHTML=voices.length?voices.map(v=>`<option${v===voice?" selected":""}>${v.name.replace(/[<&>]/g,"")}</option>`).join(""):"<option>Default voice</option>";
-}catch(e){}};
-const speak=t=>{if(S.mute)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=voice?voice.lang:"en-GB";u.rate=.88;u.pitch=1;if(voice)u.voice=voice;speechSynthesis.speak(u)}catch(e){}};
 let ac=null;
 const chime=()=>{if(S.mute)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const t0=ac.currentTime;[523,659,784,1047].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain(),t=t0+i*.1;o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.2,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.35);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+.4)})}catch(e){}};
 const tune=()=>{if(S.mute)return 0;try{
@@ -465,7 +443,7 @@ function avatarMaker(){
   mk.addEventListener("input",e=>{if(e.target.id==="avname")draft.name=e.target.value});
   mk.addEventListener("keydown",e=>{if(e.target.id==="avname"&&e.key==="Enter")$("#avok").click()});
   mk.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
-    if(b.id==="avok"){const name=draft.name.trim().slice(0,12)||cap(draft.sp);S.av=Object.assign({},draft,{name});save();$("#popwrap").innerHTML="";popOpen=false;renderTop();renderMeadow();if(cur&&!solved&&new RegExp(`\\b${name.replace(/[^A-Za-z]/g,'')}\\b`,'i').test(cur.s)){round--;next()}speak(`Hello, ${name}! Let's read some stories.`);showPop();return}
+    if(b.id==="avok"){const name=draft.name.trim().slice(0,12)||cap(draft.sp);S.av=Object.assign({},draft,{name});save();$("#popwrap").innerHTML="";popOpen=false;renderTop();renderMeadow();if(cur&&!solved&&new RegExp(`\\b${name.replace(/[^A-Za-z]/g,'')}\\b`,'i').test(cur.s)){round--;next()}showPop();return}
     if(b.dataset.k){draft[b.dataset.k]=b.dataset.v;mk.innerHTML=makerHTML()}});
 }
 function dance(){
@@ -493,7 +471,6 @@ function renderMeadow(){
   $("#barfill").style.width=full?"100%":(into/PER*100)+"%";
   $("#nextf").textContent=full?"Your meadow is full of friends!":`${PER-into} more star${PER-into===1?"":"s"} until a new friend arrives`;
 }
-const words=s=>s.split(" ").map(w=>`<span class="w" data-w="${w.replace(/[^A-Za-z']/g,"")}">${w}</span>`).join(" ");
 const tail=`<p class="msg" id="msg"></p><button class="next" id="next" hidden>Next story &#10140;</button>`;
 function next(){
   round++;solved=false;pos=0;slip=false;
@@ -506,14 +483,14 @@ function next(){
     card.innerHTML=`<div class="scene"><div class="hero" id="hero">${animal(cur.pic)}</div></div><div class="body"><p class="q">Word Train! Put the words in order to tell us about this animal.</p>
       <div class="train">${ENGINE}${cur.words.map(()=>`<span class="car"></span>`).join("")}</div>
       <div class="chips">${order.map(i=>`<button class="chip" data-w="${cur.words[i]}">${cur.words[i]}</button>`).join("")}</div>
-      <div class="qrow" style="margin-top:16px;justify-content:center"><button class="spk" data-say="1" aria-label="Hear the sentence">${SPK}</button><span class="hint">Stuck? Tap to hear it</span></div>${tail}</div>`;
+      ${tail}</div>`;
     return;
   }
   const g=GEN[S.level];let t;do{t=Math.floor(Math.random()*g.length)}while(g.length>1&&t===lastT);lastT=t;
   cur=g[t]();
   const opts=shuffle(cur.o.map((o,i)=>({o,ok:i===0})));
-  card.innerHTML=`<div class="body"><p class="story">${words(cur.s)}</p>
-    <div class="qrow"><button class="spk" data-say="1" aria-label="Read the story to me">${SPK}</button><span class="hint">Tap any word to hear it</span></div>
+  card.innerHTML=`<div class="body"><p class="story">${cur.s}</p>
+    
     <p class="q">${cur.q}</p>
     <div class="answers">${opts.map((x,i)=>`<button class="tile" data-ok="${x.ok?1:0}" aria-label="Picture ${i+1}">${animal(x.o)}</button>`).join("")}</div>${tail}</div>`;
 }
@@ -557,9 +534,7 @@ function win(el){
 
 /* ---------- events ---------- */
 $("#card").addEventListener("click",e=>{
-  const t=e.target.closest("button,.w");if(!t)return;
-  if(t.classList.contains("w")){speak(t.dataset.w||t.textContent);t.classList.add("say");setTimeout(()=>t.classList.remove("say"),700);return}
-  if(t.dataset.say){speak(cur.s);return}
+  const t=e.target.closest("button");if(!t)return;
   if(t.id==="next"){next();window.scrollTo({top:0,behavior:calm?"auto":"smooth"});return}
   if(solved)return;
   if(t.classList.contains("tile")){
@@ -568,23 +543,21 @@ $("#card").addEventListener("click",e=>{
     return;
   }
   if(t.classList.contains("chip")){
-    const w=t.dataset.w;speak(w);
+    const w=t.dataset.w;
     if(w===cur.words[pos]){
       t.classList.add("used");t.disabled=true;
       const car=document.querySelectorAll(".car")[pos];car.textContent=w;car.classList.add("full");pos++;
-      if(pos===cur.words.length){car.textContent=w+".";win($("#hero"));setTimeout(()=>speak(cur.s),700)}
+      if(pos===cur.words.length){car.textContent=w+".";win($("#hero"))}
     }else{t.classList.remove("nope");void t.offsetWidth;t.classList.add("nope");const m=$("#msg");m.textContent="Hmm, which word comes next?";m.className="msg";breakStreak()}
   }
 });
-$("#mute").addEventListener("click",()=>{S.mute=!S.mute;if(S.mute){try{speechSynthesis.cancel()}catch(e){}}save();renderTop()});
+$("#mute").addEventListener("click",()=>{S.mute=!S.mute;save();renderTop()});
 $("#resetbox").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.id==="reset")$("#resetbox").innerHTML=`<div class="sure">Clear all stars and friends? <button id="yes">Yes, start over</button><button id="no">No, keep them</button></div>`;
-  else{if(b.id==="yes"){S={stars:0,level:0,top:0,done:[0,0,0,0],mute:S.mute,voice:S.voice,streak:0};save();renderTop();renderMeadow();round=0;next();avatarMaker()}$("#resetbox").innerHTML=`<button class="reset" id="reset">Start over</button>`}
+  else{if(b.id==="yes"){S={stars:0,level:0,top:0,done:[0,0,0,0],mute:S.mute,streak:0};save();renderTop();renderMeadow();round=0;next();avatarMaker()}$("#resetbox").innerHTML=`<button class="reset" id="reset">Start over</button>`}
 });
 $("#staricon").innerHTML=STAR(24);$("#flame").innerHTML=`<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 2.5c1 3.2 4.8 5.3 4.8 10.2A4.8 4.8 0 0 1 12 21.5a4.8 4.8 0 0 1-4.8-4.8c0-2.4 1.2-3.8 2.3-5 .2 1.6.9 2.6 1.9 3 .3-3.4-1-6.2.6-12.2z" fill="currentColor" stroke="${OL}" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
-pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice}catch(e){}setTimeout(pickVoice,800);
-$("#voice").addEventListener("change",e=>{voice=voices.find(v=>v.name===e.target.value)||voice;S.voice=voice&&voice.name;save();speak("Hello! Let's read a story together.")});
 S.level=S.top;
 renderTop();renderMeadow();next();
 if(!S.av)avatarMaker();
